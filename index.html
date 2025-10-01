@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Hotel Reservation Vendor Pricing Analysis</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Warm Neutrals with Subtle Accents -->
+    <!-- Application Structure Plan: The SPA is designed as a single-scroll dashboard, guiding the user through a logical narrative. It starts with a high-level overview (Executive Summary), then dives into the core components of pricing (Models, Cost Factors), presents concrete data (Vendor Tiers), and concludes with the value proposition (ROI). This top-down structure allows users to grasp the key concepts first before exploring the details. Interactivity is focused on a central chart where users can filter by vendor tier to see how pricing and features change, making the core data explorable and easy to compare. This is more intuitive than just listing text, as it visually connects cost to functionality. -->
+    <!-- Visualization & Content Choices: 
+        - Key Findings (Summary): Goal=Inform. Method=Bulleted list with icons. Interaction=None. Justification=Quickly conveys the main takeaways.
+        - Pricing Models: Goal=Organize. Method=Tabbed content cards (HTML/CSS/JS). Interaction=Clicking tabs to reveal content. Justification=Presents distinct models cleanly without cluttering the page.
+        - Cost Factors: Goal=Organize. Method=A grid of styled cards. Interaction=None. Justification=Visually separates the distinct factors for easy scanning.
+        - Vendor Tiers Chart: Goal=Compare. Method=Interactive Bar Chart (Chart.js/Canvas). Interaction=Buttons to filter data by tier. Justification=Allows direct visual comparison of cost ranges and connects them to vendor examples, which is the core of the report. A chart is far more effective than a table here.
+        - ROI Benefits: Goal=Inform. Method=Styled list. Interaction=None. Justification=Clearly lists the value propositions that underpin the costs.
+        - NO SVG/Mermaid used, adhering to constraints. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #F8F7F4;
+            color: #3D3B30;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 400px;
+            max-height: 50vh;
+        }
+        .nav-button {
+            transition: all 0.3s ease;
+        }
+        .nav-button.active {
+            background-color: #A68E76;
+            color: #FFFFFF;
+        }
+        .nav-button:not(.active):hover {
+            background-color: #EAE6DF;
+        }
+        .tab-button.active {
+            border-bottom-color: #A68E76;
+            color: #A68E76;
+            font-weight: 600;
+        }
+        .content-card {
+            background-color: #FFFFFF;
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            border: 1px solid #EAE6DF;
+        }
+        .tier-button {
+             background-color: #fff;
+             color: #A68E76;
+             border: 1px solid #A68E76;
+        }
+        .tier-button.active, .tier-button:hover {
+            background-color: #A68E76;
+            color: #fff;
+        }
+    </style>
+</head>
+<body class="antialiased">
+    <div class="container mx-auto p-4 sm:p-6 md:p-8 max-w-7xl">
+        <header class="text-center mb-10">
+            <h1 class="text-3xl md:text-4xl font-bold text-[#4A4134] mb-2">AI Hotel Reservation Vendor Pricing Analysis</h1>
+            <p class="text-lg text-gray-600">An interactive guide to understanding the costs of AI solutions in hospitality.</p>
+        </header>
+
+        <nav class="sticky top-0 z-10 bg-[#F8F7F4]/80 backdrop-blur-md mb-12 py-3 border-b border-gray-200">
+            <div class="flex justify-center items-center space-x-2 sm:space-x-4">
+                <a href="#summary" class="nav-button px-3 py-2 sm:px-4 text-sm font-medium rounded-full text-gray-700">Summary</a>
+                <a href="#models" class="nav-button px-3 py-2 sm:px-4 text-sm font-medium rounded-full text-gray-700">Pricing Models</a>
+                <a href="#factors" class="nav-button px-3 py-2 sm:px-4 text-sm font-medium rounded-full text-gray-700">Cost Factors</a>
+                <a href="#tiers" class="nav-button px-3 py-2 sm:px-4 text-sm font-medium rounded-full text-gray-700">Vendor Tiers</a>
+                <a href="#roi" class="nav-button px-3 py-2 sm:px-4 text-sm font-medium rounded-full text-gray-700">ROI</a>
+            </div>
+        </nav>
+
+        <main class="space-y-16">
+            <section id="summary" class="scroll-mt-24">
+                 <div class="text-center max-w-3xl mx-auto">
+                    <h2 class="text-2xl font-bold text-[#4A4134] mb-4">Executive Summary</h2>
+                    <p class="text-gray-700 leading-relaxed">This analysis explores the pricing of AI-powered hotel reservation systems. The market operates primarily on a custom-quote basis, but clear patterns emerge. The most common approach is a tiered monthly subscription, with costs varying based on hotel size, feature set, and integration needs. This dashboard allows you to explore these factors to better understand the potential investment required.</p>
+                </div>
+            </section>
+
+            <section id="models" class="scroll-mt-24">
+                <div class="text-center mb-8">
+                    <h2 class="text-2xl font-bold text-[#4A4134]">Dominant Pricing Models</h2>
+                    <p class="text-gray-600 max-w-2xl mx-auto">Vendors use a few core strategies to price their solutions. Select a model below to see how it works.</p>
+                </div>
+                <div class="max-w-4xl mx-auto">
+                    <div class="border-b border-gray-200 mb-6">
+                        <nav class="-mb-px flex justify-center space-x-6" aria-label="Tabs">
+                            <button class="tab-button active whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm" data-tab="saas">Monthly Subscription (SaaS)</button>
+                            <button class="tab-button whitespace-nowrap py-4 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300" data-tab="commission">Commission-Based</button>
+                            <button class="tab-button whitespace-nowrap py-4 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300" data-tab="hybrid">Hybrid Model</button>
+                            <button class="tab-button whitespace-nowrap py-4 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300" data-tab="setup">One-Time Setup Fee</button>
+                        </nav>
+                    </div>
+                    <div id="tab-content" class="px-4">
+                        <div id="saas-content" class="tab-pane active">
+                             <div class="content-card p-6 flex items-start space-x-4">
+                                <div class="flex-shrink-0 h-12 w-12 rounded-full bg-[#EAE6DF] flex items-center justify-center text-[#A68E76] text-2xl">
+                                    <span>📅</span>
+                                </div>
+                                <div>
+                                    <h3 class="text-lg font-semibold text-[#4A4134]">Monthly Subscription (SaaS)</h3>
+                                    <p class="text-gray-600 mt-1">This is the most common model. Hotels pay a recurring monthly or annual fee for access to the software. Pricing is often tiered (e.g., Basic, Pro, Enterprise) based on features and hotel size.</p>
+                                </div>
+                            </div>
+                        </div>
+                         <div id="commission-content" class="tab-pane hidden">
+                            <div class="content-card p-6 flex items-start space-x-4">
+                                <div class="flex-shrink-0 h-12 w-12 rounded-full bg-[#EAE6DF] flex items-center justify-center text-[#A68E76] text-2xl">
+                                    <span>💰</span>
+                                </div>
+                                <div>
+                                    <h3 class="text-lg font-semibold text-[#4A4134]">Commission-Based</h3>
+                                    <p class="text-gray-600 mt-1">The vendor takes a percentage of each booking generated through their AI system. This model directly ties the vendor's revenue to the hotel's success, making it a performance-based partnership.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="hybrid-content" class="tab-pane hidden">
+                             <div class="content-card p-6 flex items-start space-x-4">
+                                 <div class="flex-shrink-0 h-12 w-12 rounded-full bg-[#EAE6DF] flex items-center justify-center text-[#A68E76] text-2xl">
+                                    <span>⚖️</span>
+                                </div>
+                                <div>
+                                    <h3 class="text-lg font-semibold text-[#4A4134]">Hybrid Model</h3>
+                                    <p class="text-gray-600 mt-1">A blend of models, typically a lower base subscription fee combined with a commission on performance. For example, a monthly fee plus a percentage of successful upsells generated by the AI.</p>
+                                </div>
+                            </div>
+                        </div>
+                         <div id="setup-content" class="tab-pane hidden">
+                            <div class="content-card p-6 flex items-start space-x-4">
+                                <div class="flex-shrink-0 h-12 w-12 rounded-full bg-[#EAE6DF] flex items-center justify-center text-[#A68E76] text-2xl">
+                                    <span>⚙️</span>
+                                </div>
+                                <div>
+                                    <h3 class="text-lg font-semibold text-[#4A4134]">One-Time Setup Fee</h3>
+                                    <p class="text-gray-600 mt-1">An initial charge for implementation, data migration, and staff training. This is almost always paired with a recurring subscription fee and covers the upfront work needed to get the system running.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <section id="factors" class="scroll-mt-24">
+                 <div class="text-center mb-8">
+                    <h2 class="text-2xl font-bold text-[#4A4134]">Key Factors Influencing Cost</h2>
+                    <p class="text-gray-600 max-w-2xl mx-auto">The final price you receive is a function of several variables. Understanding these helps in negotiations and vendor selection.</p>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
+                    <div class="content-card p-6">
+                        <h3 class="font-semibold text-lg text-[#4A4134]">🏨 Property Size</h3>
+                        <p class="text-gray-600 mt-2">The number of rooms is a primary multiplier for subscription costs.</p>
+                    </div>
+                    <div class="content-card p-6">
+                        <h3 class="font-semibold text-lg text-[#4A4134]">🚀 Feature Set</h3>
+                        <p class="text-gray-600 mt-2">Costs escalate from basic chatbots to advanced platforms with voice AI, upselling, and revenue management.</p>
+                    </div>
+                    <div class="content-card p-6">
+                        <h3 class="font-semibold text-lg text-[#4A4134]">🔗 Integration</h3>
+                        <p class="text-gray-600 mt-2">Deep integration with your Property Management System (PMS) and other software increases complexity and cost.</p>
+                    </div>
+                    <div class="content-card p-6">
+                        <h3 class="font-semibold text-lg text-[#4A4134]">🎨 Customization</h3>
+                        <p class="text-gray-600 mt-2">Bespoke branding, custom AI training, and premium 24/7 support packages add to the overall price.</p>
+                    </div>
+                </div>
+            </section>
+            
+            <section id="tiers" class="scroll-mt-24">
+                 <div class="text-center mb-8">
+                    <h2 class="text-2xl font-bold text-[#4A4134]">Estimated Vendor Pricing Tiers</h2>
+                    <p class="text-gray-600 max-w-2xl mx-auto">Based on market analysis for a mid-sized hotel (75-150 rooms). Use the buttons below to filter the chart and explore what each tier typically offers.</p>
+                </div>
+
+                <div class="flex justify-center items-center space-x-2 sm:space-x-4 mb-8">
+                    <button class="tier-button active rounded-full px-4 py-2 text-sm font-semibold transition" data-tier="all">All Tiers</button>
+                    <button class="tier-button rounded-full px-4 py-2 text-sm font-semibold transition" data-tier="tier1">Essential Chatbot</button>
+                    <button class="tier-button rounded-full px-4 py-2 text-sm font-semibold transition" data-tier="tier2">Advanced Comms</button>
+                    <button class="tier-button rounded-full px-4 py-2 text-sm font-semibold transition" data-tier="tier3">End-to-End System</button>
+                </div>
+
+                <div class="content-card p-4 sm:p-6">
+                    <div class="chart-container">
+                        <canvas id="pricingChart"></canvas>
+                    </div>
+                </div>
+            </section>
+
+            <section id="roi" class="scroll-mt-24">
+                <div class="text-center mb-8">
+                    <h2 class="text-2xl font-bold text-[#4A4134]">Return on Investment (ROI)</h2>
+                    <p class="text-gray-600 max-w-2xl mx-auto">Vendors justify their pricing by highlighting significant value propositions that can lead to a strong ROI.</p>
+                </div>
+                <div class="max-w-3xl mx-auto space-y-4">
+                    <div class="bg-white/60 p-4 rounded-lg border border-gray-200/80">
+                        <p><strong class="text-[#A68E76]">Increased Direct Bookings:</strong> By capturing guests on your website, you bypass costly OTA commissions.</p>
+                    </div>
+                    <div class="bg-white/60 p-4 rounded-lg border border-gray-200/80">
+                        <p><strong class="text-[#A68E76]">Operational Efficiency:</strong> Automating up to 80% of common guest queries frees up front-desk and reservation staff for higher-value tasks.</p>
+                    </div>
+                    <div class="bg-white/60 p-4 rounded-lg border border-gray-200/80">
+                        <p><strong class="text-[#A68E76]">Enhanced Guest Experience:</strong> Providing instant, 24/7 answers to questions improves satisfaction and conversion rates.</p>
+                    </div>
+                     <div class="bg-white/60 p-4 rounded-lg border border-gray-200/80">
+                        <p><strong class="text-[#A68E76]">Revenue Uplift:</strong> AI-powered tools can intelligently offer room upgrades, late check-outs, and amenities, increasing total revenue per guest.</p>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <footer class="text-center mt-16 pt-8 border-t border-gray-200">
+            <p class="text-sm text-gray-500">&copy; 2025 Pricing Analysis. All data is estimated and for informational purposes only.</p>
+        </footer>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const chartData = {
+                tier1: {
+                    labels: ['Asksuite (Basic)', 'Quicktext (Basic)'],
+                    datasets: [{
+                        label: 'Estimated Monthly Cost ($)',
+                        data: [[200, 400], [250, 450]],
+                        backgroundColor: 'rgba(166, 142, 118, 0.6)',
+                        borderColor: 'rgba(166, 142, 118, 1)',
+                        borderWidth: 1,
+                        borderRadius: 5,
+                        borderSkipped: false,
+                    }]
+                },
+                tier2: {
+                    labels: ['Book-Me-Bob', 'Asksuite (Pro)'],
+                    datasets: [{
+                        label: 'Estimated Monthly Cost ($)',
+                        data: [[450, 650], [500, 700]],
+                        backgroundColor: 'rgba(74, 65, 52, 0.6)',
+                        borderColor: 'rgba(74, 65, 52, 1)',
+                        borderWidth: 1,
+                        borderRadius: 5,
+                        borderSkipped: false,
+                    }]
+                },
+                tier3: {
+                    labels: ['Travel-Ticker.AI', 'Enterprise Solutions'],
+                     datasets: [{
+                        label: 'Estimated Monthly Cost ($)',
+                        data: [[700, 1200], [1000, 1500]],
+                        backgroundColor: 'rgba(61, 59, 48, 0.6)',
+                        borderColor: 'rgba(61, 59, 48, 1)',
+                        borderWidth: 1,
+                        borderRadius: 5,
+                        borderSkipped: false,
+                    }]
+                },
+                 all: {
+                    labels: ['Asksuite (Basic)', 'Quicktext (Basic)', 'Book-Me-Bob', 'Asksuite (Pro)', 'Travel-Ticker.AI', 'Enterprise'],
+                    datasets: [{
+                        label: 'Estimated Monthly Cost ($)',
+                        data: [[200, 400], [250, 450], [450, 650], [500, 700], [700, 1200], [1000, 1500]],
+                        backgroundColor: [
+                            'rgba(166, 142, 118, 0.6)',
+                            'rgba(166, 142, 118, 0.7)',
+                            'rgba(74, 65, 52, 0.6)',
+                            'rgba(74, 65, 52, 0.7)',
+                            'rgba(61, 59, 48, 0.6)',
+                            'rgba(61, 59, 48, 0.7)',
+                        ],
+                        borderColor: [
+                            'rgba(166, 142, 118, 1)',
+                            'rgba(166, 142, 118, 1)',
+                            'rgba(74, 65, 52, 1)',
+                            'rgba(74, 65, 52, 1)',
+                            'rgba(61, 59, 48, 1)',
+                            'rgba(61, 59, 48, 1)',
+                        ],
+                        borderWidth: 1,
+                        borderRadius: 5,
+                        borderSkipped: false,
+                    }]
+                }
+            };
+
+            const ctx = document.getElementById('pricingChart').getContext('2d');
+            const pricingChart = new Chart(ctx, {
+                type: 'bar',
+                data: chartData.all,
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Estimated Monthly Cost (USD)'
+                            }
+                        },
+                        y: {
+                           ticks: {
+                                autoSkip: false
+                           }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const val = context.raw;
+                                    return `Cost Range: $${val[0]} - $${val[1]}`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            const tierButtons = document.querySelectorAll('.tier-button');
+            tierButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    tierButtons.forEach(btn => btn.classList.remove('active'));
+                    button.classList.add('active');
+                    const tier = button.dataset.tier;
+                    pricingChart.data = chartData[tier];
+                    pricingChart.update();
+                });
+            });
+
+            const navButtons = document.querySelectorAll('.nav-button');
+            const sections = document.querySelectorAll('main section');
+            window.addEventListener('scroll', () => {
+                let current = '';
+                sections.forEach(section => {
+                    const sectionTop = section.offsetTop;
+                    if (pageYOffset >= sectionTop - 120) {
+                        current = section.getAttribute('id');
+                    }
+                });
+
+                navButtons.forEach(button => {
+                    button.classList.remove('active');
+                    if (button.getAttribute('href') === `#${current}`) {
+                        button.classList.add('active');
+                    }
+                });
+            });
+            
+             const tabButtons = document.querySelectorAll('.tab-button');
+             const tabPanes = document.querySelectorAll('.tab-pane');
+             tabButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    tabButtons.forEach(btn => btn.classList.remove('active'));
+                    button.classList.add('active');
+                    
+                    const tabId = button.dataset.tab;
+                    
+                    tabPanes.forEach(pane => {
+                        if (pane.id === `${tabId}-content`) {
+                            pane.classList.remove('hidden');
+                            pane.classList.add('active');
+                        } else {
+                            pane.classList.add('hidden');
+                            pane.classList.remove('active');
+                        }
+                    });
+                });
+            });
+        });
+    </script>
+</body>
+</html>
